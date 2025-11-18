@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Aiyaar — Join Beta</title>
+  <style>
+    :root{--bg:#f4f6fc;--card:#fff;--accent:#6c63ff;--muted:#666;}
+    body{font-family:Inter, Arial, sans-serif; margin:0; min-height:100vh; background:var(--bg); color:#111;}
+    .wrap{max-width:900px;margin:48px auto;padding:24px;}
+    .card{background:var(--card);border-radius:12px;padding:28px;box-shadow:0 6px 20px rgba(16,24,40,0.06);}
+    h1{margin:0;font-size:34px}
+    p.lead{color:var(--muted);margin:10px 0 22px}
+    .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input[type="email"]{flex:1;min-width:220px;padding:12px;border-radius:8px;border:1px solid #ddd;font-size:15px}
+    button{background:var(--accent);color:#fff;padding:10px 16px;border-radius:8px;border:0;font-weight:600;cursor:pointer}
+    .small{font-size:13px;color:var(--muted);margin-top:12px}
+    .thanks{margin-top:18px;padding:14px;background:#ecf0ff;border-radius:8px;color:#1b1b1b;display:none}
+    .export-row{margin-top:18px;display:flex;gap:10px;align-items:center}
+    .note{font-size:13px;color:#888}
+    footer{margin-top:22px;text-align:center;color:#888;font-size:13px}
+    @media(max-width:520px){h1{font-size:26px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Aiyaar</h1>
+      <p class="lead">Your Emotional AI — Roasts + Motivates + Helps</p>
+
+      <section aria-labelledby="join-title">
+        <h2 id="join-title" style="font-size:18px;margin:0 0 10px">Join the Beta</h2>
+        <p class="note">Enter your email to get early access. We'll never spam you.</p>
+
+        <form id="betaForm" class="form-row" onsubmit="return false;">
+          <input id="emailInput" type="email" placeholder="you@example.com" required />
+          <button id="joinBtn" type="button">Join Beta</button>
+        </form>
+
+        <div id="thanks" class="thanks"></div>
+
+        <div class="export-row">
+          <button id="exportBtn" type="button" style="background:#222">Export saved emails (CSV)</button>
+          <div class="note">Saved locally in your browser (localStorage). Use Export to download.</div>
+        </div>
+
+        <p class="small">Tip: This demo saves emails on your computer only. For a live beta list you can connect this form to a backend or Formspree later.</p>
+      </section>
+    </div>
+
+    <footer>© <span id="year"></span> Aiyaar — The Emotional AI</footer>
+  </div>
+
+  <script>
+    const KEY = 'aiyaar_beta_emails_v1';
+    const emailInput = document.getElementById('emailInput');
+    const joinBtn = document.getElementById('joinBtn');
+    const thanks = document.getElementById('thanks');
+    const exportBtn = document.getElementById('exportBtn');
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function loadEmails() {
+      try {
+        const raw = localStorage.getItem(KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    function saveEmails(list) {
+      localStorage.setItem(KEY, JSON.stringify(list));
+    }
+
+    joinBtn.addEventListener('click', () => {
+      const email = (emailInput.value || '').trim();
+      if (!email) {
+        alert('Please enter your email.');
+        emailInput.focus();
+        return;
+      }
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!re.test(email)) {
+        alert('Please enter a valid email address.');
+        emailInput.focus();
+        return;
+      }
+
+      const list = loadEmails();
+      if (!list.includes(email)) {
+        list.push(email);
+        saveEmails(list);
+      }
+
+      thanks.style.display = 'block';
+      thanks.textContent = 'Thanks for joining the beta — you are on the list!';
+      emailInput.value = '';
+      setTimeout(() => { thanks.style.display = 'none'; }, 4000);
+    });
+
+    exportBtn.addEventListener('click', () => {
+      const list = loadEmails();
+      if (!list.length) {
+        alert('No emails saved yet.');
+        return;
+      }
+      const csv = 'email\n' + list.map(e => '"' + e.replace(/"/g,'""') + '"').join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'aiyaar_beta_emails.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    emailInput.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        joinBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>
